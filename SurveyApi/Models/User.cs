@@ -10,7 +10,7 @@ namespace SurveyApi.Models
         public User()
         {
             UserAnswers = new HashSet<UserAnswer>();
-            RoleUsers = new HashSet<RoleUser>();
+            //RoleUsers = new HashSet<RoleUser>();
         }
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -39,6 +39,6 @@ namespace SurveyApi.Models
 
         //Inverse prop
         public ICollection<UserAnswer> UserAnswers { get; set; }
-        public ICollection<RoleUser> RoleUsers { get; set; }
+        //public ICollection<RoleUser> RoleUsers { get; set; }
     }
 }
