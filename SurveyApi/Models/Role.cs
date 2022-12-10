@@ -15,6 +15,6 @@ namespace SurveyApi.Models
         public string StrName { get; set; } = null!;
 
         //Inverse prop
-        //public RoleUser RoleUsers { get; set; }
+        public List<User>? Users { get; set; }
     }
 }

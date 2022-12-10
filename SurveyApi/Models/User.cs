@@ -10,7 +10,6 @@ namespace SurveyApi.Models
         public User()
         {
             UserAnswers = new HashSet<UserAnswer>();
-            //RoleUsers = new HashSet<RoleUser>();
         }
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -26,7 +25,7 @@ namespace SurveyApi.Models
         public string? StrLastSurname { get; set; }
         [StringLength(100)]
         [Unicode(false)]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
         public byte[] PasswordHash { get; set; } = null!;
         public byte[] PasswordSalt { get; set; } = null!;
         //public byte[]? Photo { get; set; }
@@ -39,6 +38,6 @@ namespace SurveyApi.Models
 
         //Inverse prop
         public ICollection<UserAnswer> UserAnswers { get; set; }
-        //public ICollection<RoleUser> RoleUsers { get; set; }
+        public List<Role>? Roles { get; set; }
     }
 }
