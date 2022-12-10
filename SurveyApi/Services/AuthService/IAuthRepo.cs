@@ -6,9 +6,9 @@ namespace SurveyApi.Services.AuthService
     public interface IAuthRepo
     {
         Task<ServiceResponse<string>> Register(User user, string password);
-        Task<ServiceResponse<string>> Login(string username, string password);
+        Task<ServiceResponse<string>> Login(string username, string password, string email);
         Task<ServiceResponse<GetUserDto>> UpdateUser(User user, string password, Guid id);
-        Task<bool> UserNameExist(string username);
+        Task<bool> UserExist(string username, string email);
         Task<bool> UserIdExist(Guid id);
     }
 }

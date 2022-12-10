@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SurveyApi.Data;
+using SurveyApi.Dtos.AuthRepo;
 using SurveyApi.Models;
+using SurveyApi.Services.AuthService;
 
 namespace SurveyApi.Controllers
 {
@@ -15,94 +17,47 @@ namespace SurveyApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly IAuthRepo _authRepo;
 
-        public AuthController(DataContext context)
+        public AuthController(DataContext context, IAuthRepo authRepo)
         {
             _context = context;
+            _authRepo = authRepo;
         }
 
-        // GET: api/Auth
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUser()
+        [HttpPost("register")]
+        public async Task<ActionResult<ServiceResponse<int>>> Register(UserRegisterDto request)
         {
-            return await _context.User.ToListAsync();
-        }
-
-        // GET: api/Auth/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(Guid id)
-        {
-            var user = await _context.User.FindAsync(id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return user;
-        }
-
-        // PUT: api/Auth/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(Guid id, User user)
-        {
-            if (id != user.IdUser)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
+            //Data that will be inserted by user
+            var response = await _authRepo.Register(
+                new User
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                    StrName = request.StrName,
+                    StrFirstSurname = request.StrFirstSurname,
+                    StrLastSurname = request.StrLastSurname,
+                    Email = request.Email,
+                    Status = request.Status,
+                    PhotoId = request.PhotoId,
+                }, request.Password
+            );
 
-            return NoContent();
-        }
-
-        // POST: api/Auth
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
-            _context.User.Add(user);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUser", new { id = user.IdUser }, user);
-        }
-
-        // DELETE: api/Auth/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(Guid id)
-        {
-            var user = await _context.User.FindAsync(id);
-            if (user == null)
+            if (!response.Success)
             {
-                return NotFound();
+                return BadRequest(response);
             }
-
-            _context.User.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok(response);
         }
 
-        private bool UserExists(Guid id)
+        [HttpPost("login")]
+        public async Task<ActionResult<ServiceResponse<string>>> Login(UserLoginDto request)
         {
-            return _context.User.Any(e => e.IdUser == id);
+            var response = await _authRepo.Login(request.StrName, request.Password, request.Email);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
         }
     }
 }
