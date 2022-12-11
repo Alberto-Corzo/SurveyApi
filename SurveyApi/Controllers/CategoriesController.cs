@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SurveyApi.Data;
+using SurveyApi.Dtos.Category;
 using SurveyApi.Models;
+using SurveyApi.Services.CategoryService;
 
 namespace SurveyApi.Controllers
 {
@@ -14,95 +16,63 @@ namespace SurveyApi.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly ICategoryService _categoryService;
 
-        public CategoriesController(DataContext context)
+        public CategoriesController(ICategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
 
         // GET: api/Categories
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Category>>> GetCategory()
+        public async Task<ActionResult<ServiceResponse<List<GetCategoryDto>>>> GetCategory()
         {
-            return await _context.Category.ToListAsync();
+            return Ok(await _categoryService.GetAllCategories());
         }
 
         // GET: api/Categories/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Category>> GetCategory(Guid id)
+        public async Task<ActionResult<ServiceResponse<GetCategoryDto>>> GetCategoryById(Guid id)
         {
-            var category = await _context.Category.FindAsync(id);
-
-            if (category == null)
+            var response = await _categoryService.GetCategoryById(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            return category;
+            return Ok(response);
         }
 
         // PUT: api/Categories/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategory(Guid id, Category category)
+        public async Task<ActionResult<ServiceResponse<GetCategoryDto>>> PutCategory(Guid id, UpdateCategoryDto category)
         {
-            if (id != category.IdCategory)
+            var response = await _categoryService.UpdateCategory(category, id);
+            if (response.Data == null)
             {
-                return BadRequest();
+                return NotFound(response);
             }
-
-            _context.Entry(category).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoryExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(response);
         }
 
         // POST: api/Categories
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Category>> PostCategory(Category category)
+        public async Task<ActionResult<ServiceResponse<List<GetCategoryDto>>>> PostCategory(AddCategoryDto category)
         {
-            _context.Category.Add(category);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetCategory", new { id = category.IdCategory }, category);
+            return Ok(await _categoryService.AddCategory(category));
         }
 
         // DELETE: api/Categories/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCategory(Guid id)
+        public async Task<ActionResult<ServiceResponse<List<GetCategoryDto>>>> DeleteCategory(Guid id)
         {
-            var category = await _context.Category.FindAsync(id);
-            if (category == null)
+            var response = await _categoryService.DeleteCategory(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            _context.Category.Remove(category);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool CategoryExists(Guid id)
-        {
-            return _context.Category.Any(e => e.IdCategory == id);
+            return Ok(response);
         }
     }
 }

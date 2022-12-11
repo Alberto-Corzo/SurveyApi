@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SurveyApi.Data;
 using SurveyApi.Services.AuthService;
+using SurveyApi.Services.CategoryService;
 using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,7 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 //Interfaces and classes implemenations
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
