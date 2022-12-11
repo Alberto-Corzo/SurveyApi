@@ -28,6 +28,9 @@ builder.Services.AddSwaggerGen(c => {
     c.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
+// AutoMapper Implementation
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
 //Interfaces and classes implemenations
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 

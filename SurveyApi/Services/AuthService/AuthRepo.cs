@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SurveyApi.Data;
 using SurveyApi.Dtos.AuthRepo;
 using SurveyApi.Models;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -12,11 +14,13 @@ namespace SurveyApi.Services.AuthService
     {
         private readonly DataContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
-        public AuthRepo(DataContext context, IConfiguration configuration)
+        public AuthRepo(DataContext context, IConfiguration configuration, IMapper mapper)
         {
             _context = context;
             _configuration = configuration;
+            _mapper = mapper;
         }
         public async Task<ServiceResponse<string>> Login(string username, string password, string email)
         {
@@ -36,7 +40,7 @@ namespace SurveyApi.Services.AuthService
                 response.Success = false;
                 response.Message = "Wrong Password";
             }
-            else
+            else  
             {
                 response.Data = CreateToken(user);
             }
@@ -67,22 +71,23 @@ namespace SurveyApi.Services.AuthService
             return response;
         }
 
-        public async Task<ServiceResponse<GetUserDto>> UpdateUser(User user, string password, Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<bool> UserIdExist(Guid id)
         {
-            throw new NotImplementedException();
+            if (await _context.User.AnyAsync(u => u.IdUser.ToString().ToUpper() == id.ToString().ToUpper()))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public async Task<bool> UserExist(string username, string email)
         {
-            var userName = await _context.User.AnyAsync(u => u.StrName.ToLower() == username.ToLower());
-            var userEmail = await _context.User.AnyAsync(u => u.Email.ToLower() == email.ToLower());
+            var user = await _context.User
+                .Where(e => e.Email.ToLower() == email.ToLower())
+                .AnyAsync(u => u.StrName.ToLower() == username.ToLower());
 
-            if (userName && userEmail)
+            if (user)
             {
                 return true;
             }
@@ -111,7 +116,7 @@ namespace SurveyApi.Services.AuthService
         private string CreateToken(User user)
         {
 
-            //Listado de Parametros que tendrá el Json Token
+            //Parameters that will have the Token
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.IdUser.ToString()),
@@ -137,5 +142,99 @@ namespace SurveyApi.Services.AuthService
             return tokenHandler.WriteToken(token);
         }
 
+        public async Task<ServiceResponse<List<GetUserDto>>> GetAllUser()
+        {
+            var response = new ServiceResponse<List<GetUserDto>>();
+
+            var users = await _context.User.ToListAsync();
+
+            response.Data = users.Select(u => _mapper.Map<GetUserDto>(u)).ToList();
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<List<GetUserDto>>> DeleteUser(Guid id)
+        {
+            ServiceResponse<List<GetUserDto>> response = new ServiceResponse<List<GetUserDto>>();
+            try
+            {
+                User user = await _context.User
+                    .FirstOrDefaultAsync(u => u.IdUser.ToString().ToUpper() == id.ToString().ToUpper());
+
+                if (user != null)
+                {
+                    _context.User.Remove(user);
+                    await _context.SaveChangesAsync();
+
+                    response.Data = _context.User.Select(u => _mapper.Map<GetUserDto>(u)).ToList();
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = "User Not Found";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<GetUserDto>> GetUserById(Guid id)
+        {
+            var response = new ServiceResponse<GetUserDto>();
+            var user = await _context.User
+                .FirstOrDefaultAsync(u => u.IdUser.ToString().ToUpper() == id.ToString().ToUpper());
+
+            if (user != null)
+            {
+                response.Data = _mapper.Map<GetUserDto>(user);
+            }
+            else
+            {
+                response.Success = false;
+                response.Message = "User Not Found";
+            }
+
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<GetUserDto>> UpdateUser(User user, string password, Guid id)
+        {
+            ServiceResponse<GetUserDto> response = new ServiceResponse<GetUserDto>();
+
+            try
+            {
+                if(await UserIdExist(id))
+                {
+                    CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
+
+                    user.PasswordHash = passwordHash;
+                    user.PasswordSalt = passwordSalt;
+                    user.IdUser = id;
+
+                    _context.Entry(user).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+
+                    response.Data = _mapper.Map<GetUserDto>(user);
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = "User Not Found";
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
+        }
     }
 }

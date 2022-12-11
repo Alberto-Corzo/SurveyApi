@@ -59,5 +59,54 @@ namespace SurveyApi.Controllers
             }
             return Ok(response);
         }
+
+        [HttpGet("users")]
+        public async Task<ActionResult<ServiceResponse<List<GetUserDto>>>> GetUser()
+        {
+            return Ok(await _authRepo.GetAllUser());
+        }
+        [HttpGet("user/{id}")]
+        public async Task<ActionResult<ServiceResponse<GetUserDto>>> GetUserById(Guid id)
+        {
+            var response = await _authRepo.GetUserById(id);
+
+            if (response.Data == null)
+            {
+                return NotFound(response);
+            }
+            return Ok(response);
+        }
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<ServiceResponse<List<GetUserDto>>>> DeleteUser(Guid id)
+        {
+            var response = await _authRepo.DeleteUser(id);
+            if (response.Data == null)
+            {
+                return NotFound(response);
+            }
+
+            return Ok(response);
+        }
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ServiceResponse<GetUserDto>>> UpdateUser(UpdateUserDto updUser, Guid id)
+        {
+            var response = await _authRepo.UpdateUser(
+                    new User 
+                    {
+                        StrName = updUser.StrName,
+                        StrFirstSurname = updUser.StrFirstSurname,
+                        StrLastSurname = updUser.StrLastSurname,
+                        Email = updUser.Email,
+                        Status = updUser.Status,
+                        PhotoId = updUser.PhotoId,
+                    }, updUser.Password, id
+                );
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }
