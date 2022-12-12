@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SurveyApi.Data;
+using SurveyApi.Dtos.Photo;
 using SurveyApi.Models;
+using SurveyApi.Services.PhotoService;
 
 namespace SurveyApi.Controllers
 {
@@ -14,95 +15,63 @@ namespace SurveyApi.Controllers
     [ApiController]
     public class PhotosController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IPhotoService _photoService;
 
-        public PhotosController(DataContext context)
+        public PhotosController(IPhotoService photoService)
         {
-            _context = context;
+            _photoService = photoService;
         }
 
         // GET: api/Photos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Photo>>> GetPhoto()
+        public async Task<ActionResult<ServiceResponse<List<GetPhotoDto>>>> GetPhoto()
         {
-            return await _context.Photo.ToListAsync();
+            return Ok(await _photoService.GetAllPhotos());
         }
 
         // GET: api/Photos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Photo>> GetPhoto(Guid id)
+        public async Task<ActionResult<ServiceResponse<GetPhotoDto>>> GetPhotoById(Guid id)
         {
-            var photo = await _context.Photo.FindAsync(id);
-
-            if (photo == null)
+            var response = await _photoService.GetPhotoById(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            return photo;
+            return Ok(response);
         }
 
         // PUT: api/Photos/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPhoto(Guid id, Photo photo)
+        public async Task<ActionResult<ServiceResponse<GetPhotoDto>>> PutPhoto(Guid id, UpdatePhotoDto photo)
         {
-            if (id != photo.IdPhoto)
+            var response = await _photoService.UpdatePhoto(photo, id);
+            if (response.Data == null)
             {
-                return BadRequest();
+                return NotFound(response);
             }
-
-            _context.Entry(photo).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PhotoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(response);
         }
 
         // POST: api/Photos
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Photo>> PostPhoto(Photo photo)
+        public async Task<ActionResult<ServiceResponse<List<GetPhotoDto>>>> PostPhoto(AddPhotoDto photo)
         {
-            _context.Photo.Add(photo);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPhoto", new { id = photo.IdPhoto }, photo);
+            return Ok(await _photoService.AddPhoto(photo));
         }
 
         // DELETE: api/Photos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePhoto(Guid id)
+        public async Task<ActionResult<ServiceResponse<List<GetPhotoDto>>>> DeletePhoto(Guid id)
         {
-            var photo = await _context.Photo.FindAsync(id);
-            if (photo == null)
+            var response = await _photoService.DeletePhoto(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            _context.Photo.Remove(photo);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool PhotoExists(Guid id)
-        {
-            return _context.Photo.Any(e => e.IdPhoto == id);
+            return Ok(response);
         }
     }
 }

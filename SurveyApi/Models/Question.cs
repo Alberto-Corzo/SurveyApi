@@ -18,7 +18,7 @@ namespace SurveyApi.Models
         public Guid IdQuestion { get; set; }
         [StringLength(255)]
         [Unicode(false)]
-        public string StrQuestionTxt { get; set; } = null!;
+        public string StrQuestion { get; set; } = null!;
         [StringLength(50)]
         [Unicode(false)]
         public string StrQuestionType { get; set; } = null!;

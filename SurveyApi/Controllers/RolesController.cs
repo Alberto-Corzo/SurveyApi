@@ -6,7 +6,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SurveyApi.Data;
+using SurveyApi.Dtos.Category;
+using SurveyApi.Dtos.Role;
 using SurveyApi.Models;
+using SurveyApi.Services.RoleService;
 
 namespace SurveyApi.Controllers
 {
@@ -14,95 +17,63 @@ namespace SurveyApi.Controllers
     [ApiController]
     public class RolesController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IRoleService _roleService;
 
-        public RolesController(DataContext context)
+        public RolesController(IRoleService roleService)
         {
-            _context = context;
+            _roleService = roleService;
         }
 
         // GET: api/Roles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Role>>> GetRole()
+        public async Task<ActionResult<ServiceResponse<List<GetRoleDto>>>> GetRole()
         {
-            return await _context.Role.ToListAsync();
+            return Ok(await _roleService.GetAllRoles());
         }
 
         // GET: api/Roles/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Role>> GetRole(Guid id)
+        public async Task<ActionResult<ServiceResponse<GetRoleDto>>> GetRoleById(Guid id)
         {
-            var role = await _context.Role.FindAsync(id);
-
-            if (role == null)
+            var response = await _roleService.GetRoleById(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            return role;
+            return Ok(response);
         }
 
         // PUT: api/Roles/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRole(Guid id, Role role)
+        public async Task<ActionResult<ServiceResponse<GetRoleDto>>> PutRole(Guid id, UpdateRoleDto role)
         {
-            if (id != role.IdRole)
+            var response = await _roleService.UpdateRole(role, id);
+            if (response.Data == null)
             {
-                return BadRequest();
+                return NotFound(response);
             }
-
-            _context.Entry(role).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RoleExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(response);
         }
 
         // POST: api/Roles
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Role>> PostRole(Role role)
+        public async Task<ActionResult<ServiceResponse<List<GetRoleDto>>>> PostRole(AddRoleDto role)
         {
-            _context.Role.Add(role);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetRole", new { id = role.IdRole }, role);
+            return Ok(await _roleService.AddRole(role));
         }
 
         // DELETE: api/Roles/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRole(Guid id)
+        public async Task<ActionResult<ServiceResponse<List<GetRoleDto>>>> DeleteRole(Guid id)
         {
-            var role = await _context.Role.FindAsync(id);
-            if (role == null)
+            var response = await _roleService.DeleteRole(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            _context.Role.Remove(role);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool RoleExists(Guid id)
-        {
-            return _context.Role.Any(e => e.IdRole == id);
+            return Ok(response);
         }
     }
 }

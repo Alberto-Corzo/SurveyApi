@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SurveyApi.Data;
+using SurveyApi.Dtos.Question;
 using SurveyApi.Models;
+using SurveyApi.Services.QuestionService;
 
 namespace SurveyApi.Controllers
 {
@@ -14,95 +16,65 @@ namespace SurveyApi.Controllers
     [ApiController]
     public class QuestionsController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IQuestionService _questionService;
+        private readonly IMapper _mapper;
 
-        public QuestionsController(DataContext context)
+        public QuestionsController(IQuestionService questionService, IMapper mapper)
         {
-            _context = context;
+            _questionService = questionService;
+            _mapper = mapper;
         }
 
         // GET: api/Questions
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Question>>> GetQuestion()
+        public async Task<ActionResult<ServiceResponse<List<GetQuestionDto>>>> GetQuestion()
         {
-            return await _context.Question.ToListAsync();
+            return Ok(await _questionService.GetAllQuestions());
         }
 
         // GET: api/Questions/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Question>> GetQuestion(Guid id)
+        public async Task<ActionResult<ServiceResponse<GetQuestionDto>>> GetQuestionById(Guid id)
         {
-            var question = await _context.Question.FindAsync(id);
-
-            if (question == null)
+            var response = await _questionService.GetQuestionById(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            return question;
+            return Ok(response);
         }
 
         // PUT: api/Questions/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutQuestion(Guid id, Question question)
+        public async Task<ActionResult<ServiceResponse<GetQuestionDto>>> PutQuestion(Guid id, UpdateQuestionDto question)
         {
-            if (id != question.IdQuestion)
+            var response = await _questionService.UpdateQuestion(question, id);
+            if (response.Data == null)
             {
-                return BadRequest();
+                return NotFound(response);
             }
-
-            _context.Entry(question).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!QuestionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(response);
         }
 
         // POST: api/Questions
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Question>> PostQuestion(Question question)
+        public async Task<ActionResult<ServiceResponse<List<GetQuestionDto>>>> PostQuestion(AddQuestionDto question)
         {
-            _context.Question.Add(question);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetQuestion", new { id = question.IdQuestion }, question);
+            return Ok(await _questionService.AddQuestion(question));
         }
 
         // DELETE: api/Questions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteQuestion(Guid id)
+        public async Task<ActionResult<ServiceResponse<List<GetQuestionDto>>>> DeleteQuestion(Guid id)
         {
-            var question = await _context.Question.FindAsync(id);
-            if (question == null)
+            var response = await _questionService.DeleteQuestion(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            _context.Question.Remove(question);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool QuestionExists(Guid id)
-        {
-            return _context.Question.Any(e => e.IdQuestion == id);
+            return Ok(response);
         }
     }
 }

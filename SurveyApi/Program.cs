@@ -6,6 +6,10 @@ using Microsoft.OpenApi.Models;
 using SurveyApi.Data;
 using SurveyApi.Services.AuthService;
 using SurveyApi.Services.CategoryService;
+using SurveyApi.Services.PhotoService;
+using SurveyApi.Services.QuestionService;
+using SurveyApi.Services.RoleService;
+using SurveyApi.Services.SurveyService;
 using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +39,12 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 //Interfaces and classes implemenations
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
+builder.Services.AddScoped<ISurveyService, SurveyService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+//builder.Services.AddScoped<IQuestionOptionService, QuestionOptionService>();
+//builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
