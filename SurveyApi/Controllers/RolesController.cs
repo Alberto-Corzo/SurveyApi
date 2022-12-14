@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,7 @@ using SurveyApi.Services.RoleService;
 namespace SurveyApi.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class RolesController : ControllerBase
     {
@@ -25,14 +28,14 @@ namespace SurveyApi.Controllers
         }
 
         // GET: api/Roles
-        [HttpGet]
+        [HttpGet, AllowAnonymous]
         public async Task<ActionResult<ServiceResponse<List<GetRoleDto>>>> GetRole()
         {
             return Ok(await _roleService.GetAllRoles());
         }
 
         // GET: api/Roles/5
-        [HttpGet("{id}")]
+        [HttpGet("{id}"), AllowAnonymous]
         public async Task<ActionResult<ServiceResponse<GetRoleDto>>> GetRoleById(Guid id)
         {
             var response = await _roleService.GetRoleById(id);

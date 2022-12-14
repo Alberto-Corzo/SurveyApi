@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SurveyApi.Data;
+using SurveyApi.Dtos.Category;
+using SurveyApi.Dtos.UserAnswer;
 using SurveyApi.Models;
+using SurveyApi.Services.UserAnswerService;
 
 namespace SurveyApi.Controllers
 {
@@ -14,95 +19,63 @@ namespace SurveyApi.Controllers
     [ApiController]
     public class UserAnswersController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IUserAnswerService _userAnswerService;
 
-        public UserAnswersController(DataContext context)
+        public UserAnswersController(IUserAnswerService userAnswerService)
         {
-            _context = context;
+            _userAnswerService = userAnswerService;
         }
 
         // GET: api/UserAnswers
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserAnswer>>> GetUserAnswer()
+        [HttpGet, Authorize(Roles = "Admin, Normal")]
+        public async Task<ActionResult<ServiceResponse<List<GetUserAnswerDto>>>> GetUserAnswer()
         {
-            return await _context.UserAnswer.ToListAsync();
+            return Ok(await _userAnswerService.GetAllUserAnswers());
         }
 
         // GET: api/UserAnswers/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserAnswer>> GetUserAnswer(Guid id)
+        [HttpGet("{id}"), Authorize(Roles = "Admin, Normal")]
+        public async Task<ActionResult<ServiceResponse<GetUserAnswerDto>>> GetUserAnswer(Guid id)
         {
-            var userAnswer = await _context.UserAnswer.FindAsync(id);
-
-            if (userAnswer == null)
+            var response = await _userAnswerService.GetUserAnswerById(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            return userAnswer;
+            return Ok(response);
         }
 
         // PUT: api/UserAnswers/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserAnswer(Guid id, UserAnswer userAnswer)
+        [HttpPut("{id}"), Authorize(Roles = "Normal")]
+        public async Task<ActionResult<ServiceResponse<GetUserAnswerDto>>> PutUserAnswer(Guid id, UpdateUserAnswerDto userAnswer)
         {
-            if (id != userAnswer.IdUserAnswer)
+            var response = await _userAnswerService.UpdateUserAnswer(userAnswer, id);
+            if (response.Data == null)
             {
-                return BadRequest();
+                return NotFound(response);
             }
-
-            _context.Entry(userAnswer).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserAnswerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(response);
         }
 
         // POST: api/UserAnswers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<UserAnswer>> PostUserAnswer(UserAnswer userAnswer)
+        [HttpPost, Authorize(Roles = "Normal")]
+        public async Task<ActionResult<ServiceResponse<List<GetUserAnswerDto>>>> PostUserAnswer(AddUserAnswerDto userAnswer)
         {
-            _context.UserAnswer.Add(userAnswer);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUserAnswer", new { id = userAnswer.IdUserAnswer }, userAnswer);
+            return Ok(await _userAnswerService.AddUserAnswer(userAnswer));
         }
 
         // DELETE: api/UserAnswers/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUserAnswer(Guid id)
+        [HttpDelete("{id}"), Authorize(Roles = "Normal")]
+        public async Task<ActionResult<ServiceResponse<List<GetUserAnswerDto>>>> DeleteUserAnswer(Guid id)
         {
-            var userAnswer = await _context.UserAnswer.FindAsync(id);
-            if (userAnswer == null)
+            var response = await _userAnswerService.DeleteUserAnswer(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            _context.UserAnswer.Remove(userAnswer);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool UserAnswerExists(Guid id)
-        {
-            return _context.UserAnswer.Any(e => e.IdUserAnswer == id);
+            return Ok(response);
         }
     }
 }

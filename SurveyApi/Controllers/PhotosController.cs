@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,7 @@ using SurveyApi.Services.PhotoService;
 namespace SurveyApi.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin, Normal")]
     [ApiController]
     public class PhotosController : ControllerBase
     {

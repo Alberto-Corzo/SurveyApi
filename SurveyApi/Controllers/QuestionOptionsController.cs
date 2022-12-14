@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SurveyApi.Data;
+using SurveyApi.Dtos.Category;
+using SurveyApi.Dtos.QuestionOption;
 using SurveyApi.Models;
+using SurveyApi.Services.QuestionOptionService;
 
 namespace SurveyApi.Controllers
 {
@@ -14,95 +19,63 @@ namespace SurveyApi.Controllers
     [ApiController]
     public class QuestionOptionsController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IQuestionOptionService _questionOptionService;
 
-        public QuestionOptionsController(DataContext context)
+        public QuestionOptionsController(IQuestionOptionService questionOptionService)
         {
-            _context = context;
+            _questionOptionService = questionOptionService;
         }
 
         // GET: api/QuestionOptions
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<QuestionOption>>> GetQuestionOption()
+        [HttpGet, Authorize(Roles = "Admin, Normal")]
+        public async Task<ActionResult<ServiceResponse<List<GetQuestionOptionDto>>>> GetQuestionOption()
         {
-            return await _context.QuestionOption.ToListAsync();
+            return Ok(await _questionOptionService.GetAllQuestionOptions());
         }
 
         // GET: api/QuestionOptions/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<QuestionOption>> GetQuestionOption(Guid id)
+        [HttpGet("{id}"), Authorize(Roles = "Admin, Normal")]
+        public async Task<ActionResult<ServiceResponse<GetQuestionOptionDto>>> GetQuestionOptionById(Guid id)
         {
-            var questionOption = await _context.QuestionOption.FindAsync(id);
-
-            if (questionOption == null)
+            var response = await _questionOptionService.GetQuestionOptionById(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            return questionOption;
+            return Ok(response);
         }
 
         // PUT: api/QuestionOptions/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutQuestionOption(Guid id, QuestionOption questionOption)
+        [HttpPut("{id}"), Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ServiceResponse<GetQuestionOptionDto>>> PutQuestionOption(Guid id, UpdateQuestionOptionDto questionOption)
         {
-            if (id != questionOption.IdQuestionOption)
+            var response = await _questionOptionService.UpdateQuestionOption(questionOption, id);
+            if (response.Data == null)
             {
-                return BadRequest();
+                return NotFound(response);
             }
-
-            _context.Entry(questionOption).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!QuestionOptionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(response);
         }
 
         // POST: api/QuestionOptions
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<QuestionOption>> PostQuestionOption(QuestionOption questionOption)
+        [HttpPost, Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ServiceResponse<List<GetQuestionOptionDto>>>> PostQuestionOption(AddQuestionOptionDto questionOption)
         {
-            _context.QuestionOption.Add(questionOption);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetQuestionOption", new { id = questionOption.IdQuestionOption }, questionOption);
+            return Ok(await _questionOptionService.AddQuestionOption(questionOption));
         }
 
         // DELETE: api/QuestionOptions/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteQuestionOption(Guid id)
+        [HttpDelete("{id}"), Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ServiceResponse<List<GetQuestionOptionDto>>>> DeleteQuestionOption(Guid id)
         {
-            var questionOption = await _context.QuestionOption.FindAsync(id);
-            if (questionOption == null)
+            var response = await _questionOptionService.DeleteQuestionOption(id);
+            if (response.Data == null)
             {
-                return NotFound();
+                return NotFound(response);
             }
-
-            _context.QuestionOption.Remove(questionOption);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool QuestionOptionExists(Guid id)
-        {
-            return _context.QuestionOption.Any(e => e.IdQuestionOption == id);
+            return Ok(response);
         }
     }
 }

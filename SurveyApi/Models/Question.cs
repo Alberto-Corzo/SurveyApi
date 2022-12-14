@@ -29,7 +29,7 @@ namespace SurveyApi.Models
         public Survey Survey { get; set; } = null!;
 
         //Inverse prop
-        public ICollection<QuestionOption> QuestionOptions { get; set; }
+        public ICollection<QuestionOption>? QuestionOptions { get; set; }
 
         public ICollection<UserAnswer> UserAnswers { get; set; }
     }

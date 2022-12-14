@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -60,12 +62,12 @@ namespace SurveyApi.Controllers
             return Ok(response);
         }
 
-        [HttpGet("users")]
+        [HttpGet("users"), Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse<List<GetUserDto>>>> GetUser()
         {
             return Ok(await _authRepo.GetAllUser());
         }
-        [HttpGet("user/{id}")]
+        [HttpGet("user/{id}"), Authorize(Roles = "Admin, Normal")]
         public async Task<ActionResult<ServiceResponse<GetUserDto>>> GetUserById(Guid id)
         {
             var response = await _authRepo.GetUserById(id);
@@ -76,7 +78,7 @@ namespace SurveyApi.Controllers
             }
             return Ok(response);
         }
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}"), Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse<List<GetUserDto>>>> DeleteUser(Guid id)
         {
             var response = await _authRepo.DeleteUser(id);
@@ -87,11 +89,11 @@ namespace SurveyApi.Controllers
 
             return Ok(response);
         }
-        [HttpPut("{id}")]
+        [HttpPut("{id}"), Authorize(Roles = "Admin"), Authorize(Roles = "Normal")]
         public async Task<ActionResult<ServiceResponse<GetUserDto>>> UpdateUser(UpdateUserDto updUser, Guid id)
         {
             var response = await _authRepo.UpdateUser(
-                    new User 
+                    new User
                     {
                         StrName = updUser.StrName,
                         StrFirstSurname = updUser.StrFirstSurname,
@@ -107,6 +109,11 @@ namespace SurveyApi.Controllers
             }
 
             return Ok(response);
+        }
+        [HttpPost("userRole"),]
+        public async Task<ActionResult<ServiceResponse<GetUserDto>>> AddUserRole(AddUserRoleDto userRole)
+        {
+            return Ok(await _authRepo.AddUserRole(userRole));
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,14 +25,14 @@ namespace SurveyApi.Controllers
         }
 
         // GET: api/Categories
-        [HttpGet]
+        [HttpGet, Authorize(Roles = "Admin, Normal")]
         public async Task<ActionResult<ServiceResponse<List<GetCategoryDto>>>> GetCategory()
         {
             return Ok(await _categoryService.GetAllCategories());
         }
 
         // GET: api/Categories/5
-        [HttpGet("{id}")]
+        [HttpGet("{id}"), Authorize(Roles = "Admin, Normal")]
         public async Task<ActionResult<ServiceResponse<GetCategoryDto>>> GetCategoryById(Guid id)
         {
             var response = await _categoryService.GetCategoryById(id);
@@ -44,7 +45,7 @@ namespace SurveyApi.Controllers
 
         // PUT: api/Categories/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        [HttpPut("{id}"), Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse<GetCategoryDto>>> PutCategory(Guid id, UpdateCategoryDto category)
         {
             var response = await _categoryService.UpdateCategory(category, id);
@@ -57,14 +58,14 @@ namespace SurveyApi.Controllers
 
         // POST: api/Categories
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost, Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse<List<GetCategoryDto>>>> PostCategory(AddCategoryDto category)
         {
             return Ok(await _categoryService.AddCategory(category));
         }
 
         // DELETE: api/Categories/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}"), Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse<List<GetCategoryDto>>>> DeleteCategory(Guid id)
         {
             var response = await _categoryService.DeleteCategory(id);

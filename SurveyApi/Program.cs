@@ -7,9 +7,11 @@ using SurveyApi.Data;
 using SurveyApi.Services.AuthService;
 using SurveyApi.Services.CategoryService;
 using SurveyApi.Services.PhotoService;
+using SurveyApi.Services.QuestionOptionService;
 using SurveyApi.Services.QuestionService;
 using SurveyApi.Services.RoleService;
 using SurveyApi.Services.SurveyService;
+using SurveyApi.Services.UserAnswerService;
 using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,8 +45,8 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
-//builder.Services.AddScoped<IQuestionOptionService, QuestionOptionService>();
-//builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
+builder.Services.AddScoped<IQuestionOptionService, QuestionOptionService>();
+builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {

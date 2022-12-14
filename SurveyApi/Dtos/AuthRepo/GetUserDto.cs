@@ -1,4 +1,7 @@
-﻿namespace SurveyApi.Dtos.AuthRepo
+﻿using SurveyApi.Dtos.Photo;
+using SurveyApi.Dtos.Role;
+
+namespace SurveyApi.Dtos.AuthRepo
 {
     public class GetUserDto
     {
@@ -10,8 +13,8 @@
         public byte[] PasswordHash { get; set; } = null!;
         public byte[] PasswordSalt { get; set; } = null!;
         public bool? Status { get; set; }
-        public Guid PhotoId { get; set; }
 
-        //public GetPhotoDto? Photo { get; set; }
+        public GetPhotoDto? Photo { get; set; }
+        public List<GetRoleDto> Roles { get; set; }
     }
 }

@@ -11,6 +11,7 @@ namespace SurveyApi.Services.AuthService
         Task<ServiceResponse<GetUserDto>> UpdateUser(User user, string password, Guid id);
         Task<ServiceResponse<List<GetUserDto>>> DeleteUser(Guid id);
         Task<ServiceResponse<GetUserDto>> GetUserById(Guid id);
+        Task<ServiceResponse<GetUserDto>> AddUserRole(AddUserRoleDto newUserRole);
         Task<bool> UserExist(string username, string email);
         Task<bool> UserIdExist(Guid id);
     }

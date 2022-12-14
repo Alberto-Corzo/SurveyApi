@@ -27,6 +27,7 @@ namespace SurveyApi.Services.QuestionService
 
             response.Data = await _context.Question
                 .Include(s => s.Survey)
+                    .ThenInclude(cat => cat.Category)
                 .Select(q => _mapper.Map<GetQuestionDto>(q)).ToListAsync();
 
             return response;
@@ -47,6 +48,7 @@ namespace SurveyApi.Services.QuestionService
 
                     response.Data = _context.Question
                         .Include(s => s.Survey)
+                            .ThenInclude(cat => cat.Category)
                         .Select(q => _mapper.Map<GetQuestionDto>(q)).ToList();
                 }
                 else
@@ -70,6 +72,7 @@ namespace SurveyApi.Services.QuestionService
 
             var questions = await _context.Question
                 .Include(s => s.Survey)
+                    .ThenInclude(cat => cat.Category)
                 .ToListAsync();
 
             response.Data = questions.Select(c => _mapper.Map<GetQuestionDto>(c)).ToList();
@@ -82,6 +85,7 @@ namespace SurveyApi.Services.QuestionService
             var response = new ServiceResponse<GetQuestionDto>();
             var question = await _context.Question
                 .Include(s => s.Survey)
+                    .ThenInclude(cat => cat.Category)
                 .FirstOrDefaultAsync(q => q.IdQuestion.ToString().ToUpper() == id.ToString().ToUpper());
 
             if (question != null)
@@ -105,6 +109,7 @@ namespace SurveyApi.Services.QuestionService
             {
                 var question = await _context.Question
                     .Include(s => s.Survey)
+                        .ThenInclude(cat => cat.Category)
                     .FirstOrDefaultAsync(c => c.IdQuestion.ToString().ToUpper() == id.ToString().ToUpper());
 
                 if (question != null)

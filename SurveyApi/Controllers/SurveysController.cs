@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -27,14 +29,14 @@ namespace SurveyApi.Controllers
         }
 
         // GET: api/Surveys
-        [HttpGet]
+        [HttpGet, Authorize(Roles = "Admin, Normal")]
         public async Task<ActionResult<ServiceResponse<List<GetSurveyDto>>>> GetSurvey()
         {
             return Ok(await _surveyService.GetAllSurveys());
         }
 
         // GET: api/Surveys/5
-        [HttpGet("{id}")]
+        [HttpGet("{id}"), Authorize(Roles = "Admin, Normal")]
         public async Task<ActionResult<ServiceResponse<GetSurveyDto>>> GetSurvey(int id)
         {
             var response = await _surveyService.GetSurveyById(id);
@@ -47,7 +49,7 @@ namespace SurveyApi.Controllers
 
         // PUT: api/Surveys/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        [HttpPut("{id}"), Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse<GetSurveyDto>>> PutSurvey(int id, UpdateSurveyDto survey)
         {
             var response = await _surveyService.UpdateSurvey(survey, id);
@@ -60,14 +62,14 @@ namespace SurveyApi.Controllers
 
         // POST: api/Surveys
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost, Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse<List<GetSurveyDto>>>> PostSurvey(AddSurveyDto survey)
         {
             return Ok(await _surveyService.AddSurvey(survey));
         }
 
         // DELETE: api/Surveys/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}"), Authorize(Roles = "Admin")]
         public async Task<ActionResult<ServiceResponse<List<GetSurveyDto>>>> DeleteSurvey(int id)
         {
             var response = await _surveyService.DeleteSurvey(id);

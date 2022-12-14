@@ -26,6 +26,7 @@ namespace SurveyApi.Services.AuthService
         {
             var response = new ServiceResponse<string>();
             var user = await _context.User
+                .Include(r => r.Roles)
                 .Where(e => e.Email.ToLower().Equals(email.ToLower()))
                 .FirstOrDefaultAsync(u => u.StrName.ToLower().Equals(username.ToLower()));
 
@@ -125,6 +126,11 @@ namespace SurveyApi.Services.AuthService
                 new Claim(ClaimTypes.Email, user.Email),
             };
 
+            foreach (var role in user.Roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role.StrName));
+            }
+
             SymmetricSecurityKey key = new SymmetricSecurityKey(System.Text.Encoding.UTF8
                 .GetBytes(_configuration.GetSection("AppSettings:Token").Value));
 
@@ -146,7 +152,10 @@ namespace SurveyApi.Services.AuthService
         {
             var response = new ServiceResponse<List<GetUserDto>>();
 
-            var users = await _context.User.ToListAsync();
+            var users = await _context.User
+                .Include(p => p.Photo)
+                .Include(r => r.Roles)
+                .ToListAsync();
 
             response.Data = users.Select(u => _mapper.Map<GetUserDto>(u)).ToList();
 
@@ -159,6 +168,8 @@ namespace SurveyApi.Services.AuthService
             try
             {
                 User user = await _context.User
+                    .Include(p => p.Photo)
+                    .Include(r => r.Roles)
                     .FirstOrDefaultAsync(u => u.IdUser.ToString().ToUpper() == id.ToString().ToUpper());
 
                 if (user != null)
@@ -187,6 +198,8 @@ namespace SurveyApi.Services.AuthService
         {
             var response = new ServiceResponse<GetUserDto>();
             var user = await _context.User
+                .Include(p => p.Photo)
+                .Include(r => r.Roles)
                 .FirstOrDefaultAsync(u => u.IdUser.ToString().ToUpper() == id.ToString().ToUpper());
 
             if (user != null)
@@ -229,6 +242,46 @@ namespace SurveyApi.Services.AuthService
                 }
             }
             catch (DbUpdateException ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<GetUserDto>> AddUserRole(AddUserRoleDto newUserRole)
+        {
+            var response = new ServiceResponse<GetUserDto>();
+            try
+            {
+                var user = await _context.User
+                    .Include(p => p.Photo)
+                    .Include(r => r.Roles)
+                    .FirstOrDefaultAsync(u => u.IdUser == newUserRole.UsersIdRole);
+
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User Not Found";
+                    return response;
+                }
+
+                var role = await _context.Role
+                                .FirstOrDefaultAsync(r => r.IdRole == newUserRole.RolesIdUser);
+
+                if (role == null)
+                {
+                    response.Success = false;
+                    response.Message = "Role Not Found";
+                    return response;
+                }
+
+                user.Roles.Add(role);
+                await _context.SaveChangesAsync();
+                response.Data = _mapper.Map<GetUserDto>(user);
+            }
+            catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = ex.Message;
