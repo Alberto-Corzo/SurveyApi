@@ -61,7 +61,7 @@ namespace SurveyApi.Controllers
 
         // POST: api/Roles
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost, AllowAnonymous]
         public async Task<ActionResult<ServiceResponse<List<GetRoleDto>>>> PostRole(AddRoleDto role)
         {
             return Ok(await _roleService.AddRole(role));

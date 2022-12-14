@@ -59,7 +59,7 @@ namespace SurveyApi.Controllers
 
         // POST: api/Photos
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost, AllowAnonymous]
         public async Task<ActionResult<ServiceResponse<List<GetPhotoDto>>>> PostPhoto(AddPhotoDto photo)
         {
             return Ok(await _photoService.AddPhoto(photo));
