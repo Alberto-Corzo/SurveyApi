@@ -89,7 +89,7 @@ namespace SurveyApi.Controllers
 
             return Ok(response);
         }
-        [HttpPut("{id}"), Authorize(Roles = "Admin"), Authorize(Roles = "Normal")]
+        [HttpPut("{id}"), Authorize(Roles = "Admin, Normal")]
         public async Task<ActionResult<ServiceResponse<GetUserDto>>> UpdateUser(UpdateUserDto updUser, Guid id)
         {
             var response = await _authRepo.UpdateUser(
